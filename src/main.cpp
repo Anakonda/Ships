@@ -214,7 +214,9 @@ void render(void)
 	{
 		if(screenNeedsResizing)
 		{
+			//al_acknowledge_resize(Renderer::window);
 			glViewport(0, 0, Renderer::screenWidth, Renderer::screenHeight);
+			screenNeedsResizing = false;
 		}
 		glClearColor(0.0, 0.0, 0.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -274,7 +276,6 @@ void handleEvents(void)
 			}
 			case ALLEGRO_EVENT_DISPLAY_RESIZE:
 			{
-				al_acknowledge_resize(event.display.source);
 				Renderer::screenWidth = event.display.width;
 				Renderer::screenHeight = event.display.height;
 				screenNeedsResizing = true;
