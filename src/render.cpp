@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-#include <soil.h>
+#include <SOIL/SOIL.h>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -38,13 +38,6 @@ std::map<std::string, Model> models;
 std::map<std::string, unsigned int> textures;
 
 OGLFT::Filled* font;
-
-void resizeEvent(GLFWwindow* window, int width, int height)
-{
-	Renderer::screenWidth = width;
-	Renderer::screenHeight = height;
-	glViewport(0, 0, width, height);
-}
 
 bool Renderer::Init(int argc, char* argv[])
 {

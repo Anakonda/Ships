@@ -12,8 +12,6 @@
 #include "point3.h"
 #include "utils.h"
 
-#include <GLFW/glfw3.h>
-
 #include <allegro5/allegro.h>
 
 namespace Renderer

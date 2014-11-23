@@ -12,8 +12,6 @@ public:
 private:
 	ALLEGRO_TIMER *allegroTimer;
 	ALLEGRO_EVENT_QUEUE *eventQueue;
-
-
 };
 
 #endif

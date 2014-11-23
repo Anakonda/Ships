@@ -353,7 +353,5 @@ int main(int argc, char* argv[])
 		delete object.second;
 	}
 
-	glfwTerminate();
-
 	return 0;
 }
