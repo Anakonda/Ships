@@ -1,0 +1,6 @@
+﻿CMakeCache.txt
+*.exe
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+CMakeFiles/
