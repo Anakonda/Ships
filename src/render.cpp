@@ -198,7 +198,6 @@ void Renderer::LoadModel(std::string path)
 					}
 				}
 			}
-			//faces.push_back(face);
 		}
 	}
 
@@ -208,17 +207,17 @@ void Renderer::LoadModel(std::string path)
 	}
 	glGenBuffers(1, &model.vertexbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, model.vertexbuffer);
-	glBufferData(GL_ARRAY_BUFFER, model.vertices.size() * sizeof(float), &model.vertices[0], GL_STATIC_DRAW); //verts is std::vector<float>
-	//normals
+	glBufferData(GL_ARRAY_BUFFER, model.vertices.size() * sizeof(float), &model.vertices[0], GL_STATIC_DRAW);
 
+	//normals
 	glGenBuffers(1, &model.normalbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, model.normalbuffer);
-	glBufferData(GL_ARRAY_BUFFER, model.normals.size() * sizeof(float), &model.normals[0], GL_STATIC_DRAW); //normals is std::vector<float>
+	glBufferData(GL_ARRAY_BUFFER, model.normals.size() * sizeof(float), &model.normals[0], GL_STATIC_DRAW);
 
 
 	glGenBuffers(1, &model.uvbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, model.uvbuffer);
-	glBufferData(GL_ARRAY_BUFFER, model.uvcoords.size() * sizeof(float), &model.uvcoords[0], GL_STATIC_DRAW); //uvcoords is std::vector<float>
+	glBufferData(GL_ARRAY_BUFFER, model.uvcoords.size() * sizeof(float), &model.uvcoords[0], GL_STATIC_DRAW);
 
 	//indices
 	glGenBuffers(1, &model.elementbuffer);
@@ -233,7 +232,6 @@ void Renderer::LoadModel(std::string path)
 
 void Renderer::DrawModel(const std::string &path, const std::string &texture, const Point3 &pos, const Point3 &forward, const Point3 &up, const float &scale)
 {
-	glDisableClientState(GL_COLOR_ARRAY);
 	//Todo Try to load it
 	auto modelIT = models.find(path);
 	if(modelIT == models.end())
@@ -247,12 +245,6 @@ void Renderer::DrawModel(const std::string &path, const std::string &texture, co
 	}
 
 	double originalMatrix[16];
-/*
-	double originalMatrix[16] = {1, 0, 0, 0,
-								0, 1, 0, 0,
-								0, 0, 1, 0,
-								0, 0, 0, 0};
-								*/
 	glGetDoublev(GL_MODELVIEW_MATRIX, originalMatrix);
 
 	glTranslatef(pos.x, pos.y, pos.z);

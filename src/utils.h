@@ -1,8 +1,6 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-
-
 #include <vector>
 #include <string>
 #include <map>
@@ -30,6 +28,5 @@ unsigned short utils::firstUnusedKey(std::map<unsigned short, T*> map) {
 
 	return 65535;
 }
-
 
 #endif // UTILS_H

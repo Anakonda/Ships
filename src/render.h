@@ -25,17 +25,10 @@ namespace Renderer
 
 	void renderText(const std::string &text, float x, float y);
 
-//	static Point3 translate(Point3 point, Point3 angles);
-
 	extern ALLEGRO_DISPLAY* window;
 
 	extern unsigned int screenWidth;
 	extern unsigned int screenHeight;
-
-
-//	extern std::map<std::string, Model> models;
-//	extern std::map<std::string, unsigned int> textures;
-
 };
 
 #endif

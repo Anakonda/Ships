@@ -3,8 +3,6 @@
 
 #include <atomic>
 
-#define STICK_DEADZONE 8000
-
 struct GamepadStatus
 {
 	std::atomic<bool> connected;

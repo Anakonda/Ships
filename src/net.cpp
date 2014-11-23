@@ -62,7 +62,6 @@ void Net::Send(Packet packet)
 	ENetPacket *enetPacket = enet_packet_create(packet.getData().c_str(), packet.getData().size(), ENET_PACKET_FLAG_RELIABLE);
 
 	enet_host_broadcast(connection, 0, enetPacket);
-	//enet_host_flush(connection);
 }
 
 void Net::Send(Packet packet, ENetPeer *peer)

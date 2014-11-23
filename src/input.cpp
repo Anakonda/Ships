@@ -1,14 +1,9 @@
-/*
-#include <windows.h>
-#include <xinput.h>
-*/
+
 #include "input.h"
 #include "timer.h"
 
 #include <allegro5/allegro.h>
 #include <thread>
-
-#include <iostream>
 
 std::thread thread;
 bool controlsClosing;
@@ -24,7 +19,6 @@ void controlsLoop(void)
 
 	int numJoysticks = al_get_num_joysticks();
 
-	std::cout<<"numJoysticks: " << numJoysticks <<std::endl;
 	if(numJoysticks > 0)
 	{
 		controllerStatus.connected = true;

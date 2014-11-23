@@ -9,9 +9,7 @@
 #include "net.h"
 #include "timer.h"
 
-//#include <windows.h>
-
-#define CALC_INTERVAL 5
+#define CALC_INTERVAL 10
 
 bool closing;
 
@@ -22,7 +20,7 @@ bool screenNeedsResizing = false;
 
 void calculate(void)
 {
-	Timer timer(10);
+	Timer timer(CALC_INTERVAL);
 	while(!closing)
 	{
 		timer.wait();
@@ -182,7 +180,7 @@ void handlePacket(Net::Packet packet)
 
 void networking(void)
 {
-	Timer timer(10);
+	Timer timer(CALC_INTERVAL);
 	while(!closing)
 	{
 		timer.wait();
@@ -334,7 +332,6 @@ int main(int argc, char* argv[])
 	while (!closing)
 	{
 		render();
-		//glfwPollEvents();
 	}
 
 	Net::Disconnect();
