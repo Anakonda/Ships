@@ -214,7 +214,6 @@ void render(void)
 	{
 		if(screenNeedsResizing)
 		{
-			//al_acknowledge_resize(Renderer::window);
 			glViewport(0, 0, Renderer::screenWidth, Renderer::screenHeight);
 			screenNeedsResizing = false;
 		}
@@ -279,6 +278,7 @@ void handleEvents(void)
 				Renderer::screenWidth = event.display.width;
 				Renderer::screenHeight = event.display.height;
 				screenNeedsResizing = true;
+				break;
 			}
 		}
 	}

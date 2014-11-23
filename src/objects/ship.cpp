@@ -37,17 +37,7 @@ void Ship::accelerate(float newSpeed)
 	{
 		this->speed = -MAX_SPEED;
 	}
-	/*
-	this->speed = (this->speed + newSpeed)/(1 + this->speed * newSpeed/(MAX_SPEED * MAX_SPEED));
-	if(this->speed >= MAX_SPEED)
-	{
-		this->speed = MAX_SPEED - 0.0001;
-	}
-	if(this->speed <= -MAX_SPEED)
-	{
-		this->speed = -MAX_SPEED + 0.0001;
-	}
-	*/
+
 }
 
 void Ship::slow(void)
@@ -84,7 +74,7 @@ bool Ship::testLocation(const Point3 &location) const
 	translatedPoint.y = (location - this->position).dotProduct(this->up)/this->up.len();
 	translatedPoint.z = (location - this->position).dotProduct(this->heading)/this->heading.len();
 
-	if(translatedPoint.y >= 0.05 || translatedPoint.y <= 0.05)
+	if(translatedPoint.y >= 0.05 || translatedPoint.y <= -0.05)
 	{
 		return false;
 	}

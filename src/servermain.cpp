@@ -86,7 +86,6 @@ void handlePacket(ENetEvent event)
 	}
 }
 
-
 int main(int argc, char* argv[])
 {
 	closing = false;

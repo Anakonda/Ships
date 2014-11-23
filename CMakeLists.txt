@@ -21,5 +21,5 @@ set(objects "src/objects/ship.cpp" "src/objects/star.cpp" "src/objects/planet.cp
 add_executable(ships ${clientsources} ${objects} ${commonsources})
 add_executable(server ${serversources} ${objects} ${commonsources})
 
-target_link_libraries(ships oglft soil ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} enet ${FREETYPE_LIBRARIES} allegro)
+target_link_libraries(ships oglft SOIL ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} enet ${FREETYPE_LIBRARIES} allegro)
 target_link_libraries(server enet allegro)
