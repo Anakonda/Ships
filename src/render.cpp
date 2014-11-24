@@ -203,8 +203,34 @@ void Renderer::LoadModel(std::string path)
 		}
 	}
 
+	unsigned int vertexShaderObject = glCreateShader(GL_VERTEX_SHADER);
+	unsigned int fragmentShaderObject = glCreateShader(GL_FRAGMENT_SHADER);
+
+	std::string vertexString = utils::readFile("shaders/vertexshader.txt");
+	std::string fragmentString = utils::readFile("shaders/fragmentshader.txt");
+	const char* vertexCString = vertexString.c_str();
+	int vertexStringLen = vertexString.length();
+	const char* fragmentCString = fragmentString.c_str();
+	int fragmentStringLen = fragmentString.length();
+
+	glShaderSource(vertexShaderObject, 1, &vertexCString, &vertexStringLen);
+	glShaderSource(fragmentShaderObject, 1, &fragmentCString, &fragmentStringLen);
+
+	glCompileShader(vertexShaderObject);
+
+	glCompileShader(fragmentShaderObject);
+
+	unsigned int shaderProgram = glCreateProgram();
+
+	glAttachShader(shaderProgram, vertexShaderObject);
+	glAttachShader(shaderProgram, fragmentShaderObject);
+
+	glLinkProgram(shaderProgram);
+
 	glGenVertexArrays(1, &model.vao);
 	glBindVertexArray(model.vao);
+
+	glUseProgram(shaderProgram);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);

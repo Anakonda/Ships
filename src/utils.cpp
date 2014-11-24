@@ -1,6 +1,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <fstream>
 #include "utils.h"
 
 #define PI 3.14159265
@@ -54,4 +55,18 @@ std::string utils::toString(int i)
 	std::ostringstream stream;
 	stream << i;
 	return stream.str();
+}
+
+std::string utils::readFile(std::string filename)
+{
+	std::ifstream stream(filename, std::ifstream::in);
+	stream.seekg (0, stream.end);
+	int length = stream.tellg();
+	stream.seekg (0, stream.beg);
+	char * buffer = new char [length];
+	stream.read(buffer,length);
+
+	std::string contents(buffer);
+	delete buffer;
+	return contents;
 }
