@@ -27,6 +27,7 @@ public:
 	unsigned int normalbuffer;
 	unsigned int elementbuffer;
 	unsigned int uvbuffer;
+	unsigned int vao;
 
 	std::vector<float> vertices;
 	std::vector<unsigned short> elements;
@@ -109,6 +110,7 @@ void Renderer::deInit(void)
 		glDeleteBuffers(1, &model.second.normalbuffer);
 		glDeleteBuffers(1, &model.second.elementbuffer);
 		glDeleteBuffers(1, &model.second.uvbuffer);
+		glDeleteVertexArrays(1, &model.second.vao);
 	}
 
 	al_destroy_display(Renderer::window);
@@ -201,6 +203,9 @@ void Renderer::LoadModel(std::string path)
 		}
 	}
 
+	glGenVertexArrays(1, &model.vao);
+	glBindVertexArray(model.vao);
+
 	for(unsigned short i = 0; i < model.vertices.size(); i++)
 	{
 		model.elements.push_back(i);
@@ -208,24 +213,28 @@ void Renderer::LoadModel(std::string path)
 	glGenBuffers(1, &model.vertexbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, model.vertexbuffer);
 	glBufferData(GL_ARRAY_BUFFER, model.vertices.size() * sizeof(float), &model.vertices[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glEnableVertexAttribArray(0);
 
 	//normals
 	glGenBuffers(1, &model.normalbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, model.normalbuffer);
 	glBufferData(GL_ARRAY_BUFFER, model.normals.size() * sizeof(float), &model.normals[0], GL_STATIC_DRAW);
+	glNormalPointer(GL_FLOAT, 0, (void*)0 );
 
 
 	glGenBuffers(1, &model.uvbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, model.uvbuffer);
 	glBufferData(GL_ARRAY_BUFFER, model.uvcoords.size() * sizeof(float), &model.uvcoords[0], GL_STATIC_DRAW);
+	glTexCoordPointer(2, GL_FLOAT, 0, 0);
+	glEnableVertexAttribArray(0);
 
 	//indices
 	glGenBuffers(1, &model.elementbuffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model.elementbuffer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, model.elements.size() * sizeof(short), &model.elements[0], GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
 
 	models.insert(std::pair<std::string, Model>(path, model));
 }
@@ -278,29 +287,12 @@ void Renderer::DrawModel(const std::string &path, const std::string &texture, co
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
 
-	//vertices
-	glBindBuffer(GL_ARRAY_BUFFER, model.vertexbuffer);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-	glEnableVertexAttribArray(0);
-
-	//uv map
-	glBindBuffer(GL_ARRAY_BUFFER, model.uvbuffer);
-	glTexCoordPointer(2, GL_FLOAT, 0, 0);
-	glEnableVertexAttribArray(0);
-
-	//Indices
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model.elementbuffer);
-
-	//Normals
-	glBindBuffer(GL_ARRAY_BUFFER, model.normalbuffer);
-	glNormalPointer(GL_FLOAT, 0, (void*)0 );
+	glBindVertexArray(model.vao);
 
 	//Draw the mesh
 	glDrawArrays(GL_TRIANGLES, 0, model.elements.size());
-//	glDrawElements(GL_TRIANGLES, model.elements.size(), GL_UNSIGNED_SHORT, (void*)0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
 
 	glLoadMatrixd(originalMatrix);
 }
