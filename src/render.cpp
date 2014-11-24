@@ -206,6 +206,10 @@ void Renderer::LoadModel(std::string path)
 	glGenVertexArrays(1, &model.vao);
 	glBindVertexArray(model.vao);
 
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState(GL_NORMAL_ARRAY);
+
 	for(unsigned short i = 0; i < model.vertices.size(); i++)
 	{
 		model.elements.push_back(i);
@@ -282,10 +286,6 @@ void Renderer::DrawModel(const std::string &path, const std::string &texture, co
 
 	glBindTexture(GL_TEXTURE_2D, textureIT->second);
 	glColor3d(1,1,1);
-
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glEnableClientState(GL_NORMAL_ARRAY);
 
 	glBindVertexArray(model.vao);
 
