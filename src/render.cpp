@@ -28,6 +28,9 @@ public:
 	unsigned int elementbuffer;
 	unsigned int uvbuffer;
 	unsigned int vao;
+	unsigned int shaderProgram;
+	unsigned int vertexShaderObject;
+	unsigned int fragmentShaderObject;
 
 	std::vector<float> vertices;
 	std::vector<unsigned short> elements;
@@ -111,10 +114,13 @@ void Renderer::deInit(void)
 		glDeleteBuffers(1, &model.second.elementbuffer);
 		glDeleteBuffers(1, &model.second.uvbuffer);
 		glDeleteVertexArrays(1, &model.second.vao);
+		glDeleteProgram(model.second.shaderProgram);
+		glDeleteShader(model.second.vertexShaderObject);
+		glDeleteShader(model.second.fragmentShaderObject);
 	}
 
-	al_destroy_display(Renderer::window);
 	delete font;
+	al_destroy_display(Renderer::window);
 }
 
 void Renderer::LoadTexture(std::string path)
@@ -203,8 +209,8 @@ void Renderer::LoadModel(std::string path)
 		}
 	}
 
-	unsigned int vertexShaderObject = glCreateShader(GL_VERTEX_SHADER);
-	unsigned int fragmentShaderObject = glCreateShader(GL_FRAGMENT_SHADER);
+	model.vertexShaderObject = glCreateShader(GL_VERTEX_SHADER);
+	model.fragmentShaderObject = glCreateShader(GL_FRAGMENT_SHADER);
 
 	std::string vertexString = utils::readFile("shaders/vertexshader.txt");
 	std::string fragmentString = utils::readFile("shaders/fragmentshader.txt");
@@ -213,24 +219,23 @@ void Renderer::LoadModel(std::string path)
 	const char* fragmentCString = fragmentString.c_str();
 	int fragmentStringLen = fragmentString.length();
 
-	glShaderSource(vertexShaderObject, 1, &vertexCString, &vertexStringLen);
-	glShaderSource(fragmentShaderObject, 1, &fragmentCString, &fragmentStringLen);
+	glShaderSource(model.vertexShaderObject, 1, &vertexCString, &vertexStringLen);
+	glShaderSource(model.fragmentShaderObject, 1, &fragmentCString, &fragmentStringLen);
 
-	glCompileShader(vertexShaderObject);
+	glCompileShader(model.vertexShaderObject);
+	glCompileShader(model.fragmentShaderObject);
 
-	glCompileShader(fragmentShaderObject);
+	model.shaderProgram = glCreateProgram();
 
-	unsigned int shaderProgram = glCreateProgram();
+	glAttachShader(model.shaderProgram, model.vertexShaderObject);
+	glAttachShader(model.shaderProgram, model.fragmentShaderObject);
 
-	glAttachShader(shaderProgram, vertexShaderObject);
-	glAttachShader(shaderProgram, fragmentShaderObject);
-
-	glLinkProgram(shaderProgram);
+	glLinkProgram(model.shaderProgram);
 
 	glGenVertexArrays(1, &model.vao);
 	glBindVertexArray(model.vao);
 
-	glUseProgram(shaderProgram);
+	glUseProgram(model.shaderProgram);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
