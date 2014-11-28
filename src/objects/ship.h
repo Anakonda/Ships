@@ -27,6 +27,7 @@ public:
 	virtual bool testCollision(Object *other) override;
 
 	short getHP();
+	void setHP(short hp);
 
 private:
 	short HP;

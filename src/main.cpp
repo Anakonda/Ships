@@ -17,7 +17,6 @@ struct
 {
 	unsigned short ID;
 	bool stuck;
-	short HP;
 } shipData;
 
 std::map<unsigned short, Object*> objects;
@@ -76,6 +75,10 @@ void calculate(void)
 			}
 			if(colliding)
 			{
+				Net::Packet packet;
+				packet.writeChar((char)Net::Header::HP);
+				packet.writeShort(shipData.ID);
+				packet.writeShort(((Ship*)ship)->getHP());
 				//tell server
 			}
 		}
@@ -269,8 +272,20 @@ void render(void)
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 		glDisable(GL_LIGHTING);
+		glDisable(GL_TEXTURE_2D);
 
-		Renderer::renderText(std::string("Ping: ") + utils::toString(Net::getPing()), 2, 8);
+		glColor4f(1,1,1,1);
+
+		glBegin(GL_QUADS);
+			glVertex3f(0,0,0);
+			glVertex3f(0,10,0);
+			glVertex3f(Renderer::screenWidth * ((Ship*)ship)->getHP() / 1000, 10, 0);
+			glVertex3f(Renderer::screenWidth * ((Ship*)ship)->getHP() / 1000, 0, 0);
+		glEnd();
+
+		Renderer::renderText(std::string("Ping: ") + utils::toString(Net::getPing()), 2, 30);
+
+		glEnable(GL_TEXTURE_2D);
 
 		glEnable(GL_LIGHTING);
 	}

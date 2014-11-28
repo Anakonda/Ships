@@ -131,6 +131,11 @@ short Ship::getHP()
 	return this->HP;
 }
 
+void Ship::setHP(short hp)
+{
+	this->HP = hp;
+}
+
 void Ship::setVelocity(Point3 newVelocity)
 {
 	this->speed = newVelocity.len();

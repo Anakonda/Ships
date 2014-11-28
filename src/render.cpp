@@ -71,7 +71,7 @@ bool Renderer::Init(int argc, char* argv[])
 		std::cout << "Could not construct font from " << filename << std::endl;
 		return false;
 	}
-	font->setForegroundColor(1, 1, 1);
+	font->setForegroundColor(1, 0, 0);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
 	al_set_target_backbuffer(Renderer::window);

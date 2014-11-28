@@ -74,18 +74,38 @@ void handlePacket(ENetEvent event)
 	Net::Packet packet(std::string((char*)event.packet->data, event.packet->dataLength));
 	switch(packet.readChar())
 	{
-		case (int)Net::Header::ObjectData:
+		case (char)Net::Header::ObjectData:
 		{
 			unsigned short id = packet.readShort();
 			Object::Type type = (Object::Type)packet.readChar();
-			if(id == clients.find((size_t)event.peer->data)->second.ship->getID() && type == Object::Type::Ship)
+			if(clients.find((size_t)event.peer->data) != clients.end())
 			{
-				Object *ship = objects.find(id)->second;
-				ship->setPosition(packet.readPoint());
-				ship->setHeading(packet.readPoint());
-				ship->setUp(packet.readPoint());
-				ship->setVelocity(packet.readPoint());
-				ship->needsSending = true;
+				if(id == clients.find((size_t)event.peer->data)->second.ship->getID() && type == Object::Type::Ship)
+				{
+					Object *ship = objects.find(id)->second;
+					ship->setPosition(packet.readPoint());
+					ship->setHeading(packet.readPoint());
+					ship->setUp(packet.readPoint());
+					ship->setVelocity(packet.readPoint());
+					ship->needsSending = true;
+				}
+			}
+			break;
+		}
+		case (char)Net::Header::HP:
+		{
+			unsigned short ID = packet.readShort();
+			unsigned short hp = packet.readShort();
+			if(clients.find((size_t)event.peer->data) != clients.end())
+			{
+				if(ID == clients.find((size_t)event.peer->data)->second.ship->getID() && type == Object::Type::Ship)
+				{
+					Ship *ship =clients.find((size_t)event.peer->data)->second.ship;
+					if(ship->getHP() >= hp)
+					{
+						ship->setHP(hp);
+					}
+				}
 			}
 			break;
 		}
