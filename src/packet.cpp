@@ -2,8 +2,7 @@
 
 #include <cmath>
 
-#define FRAC_MAX 2147483647 /* 2**31 - 1 */
-
+#define FRAC_MAX 2147483647L /* 2**31 - 1 */
 
 Net::Packet::Packet() : data(""), pos(0)
 {
@@ -40,18 +39,18 @@ void Net::Packet::writeShort(short value) {
 
 void Net::Packet::writeFloat(float arg)
 {
+
+	if(arg <= 0.5 && arg >= -0.5)
+	{
+		this->writeInt(-1);
+		this->writeInt((int)(arg * FRAC_MAX * 2));
+		return;
+	}
+
 	int exp;
 	int frac;
 
 	double xf = fabs(frexp(arg, &exp)) - 0.5;
-
-
-	if (xf < 0.0)
-	{
-		this->writeInt(0);
-		this->writeInt(0);
-		return;
-	}
 
 	frac = 1 + (int)(xf * 2.0 * (FRAC_MAX - 1));
 
@@ -88,26 +87,33 @@ short Net::Packet::readShort() {
 
 float Net::Packet::readFloat(void)
 {
-	float exp = this->readInt();
-	float frac = this->readInt();
 
-	double xf, x;
+	int exp = this->readInt();
+	int frac = this->readInt();
+
+	if(exp == -1 || exp == -16843009)
+	{
+		if(frac != 0)
+		return (float)frac / 2.0 / FRAC_MAX;
+	}
 
 	if (frac == 0)
 	{
-        return 0.0;
+		return 0.0;
 	}
 
-    xf = ((double)(llabs(frac) - 1) / (FRAC_MAX - 1)) / 2.0;
+	double xf, x;
 
-    x = ldexp(xf + 0.5, exp);
+	xf = ((double)(llabs((float)frac) - 1) / (FRAC_MAX - 1)) / 2.0;
+
+	x = ldexp(xf + 0.5, (float)exp);
 
     if (frac < 0)
 	{
-        x = -x;
+		x = -x;
 	}
 
-    return x;
+	return x;
 }
 
 std::string Net::Packet::readString(void)
