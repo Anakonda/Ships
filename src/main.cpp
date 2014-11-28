@@ -55,7 +55,7 @@ void calculate(void)
 		}
 		for(auto &object : objects)
 		{
-			object.second->simulateFrame();
+			object.second->simulateFrame(CALC_INTERVAL);
 		}
 		bool colliding = false;
 		for(auto &object : objects)

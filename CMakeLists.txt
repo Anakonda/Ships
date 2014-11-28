@@ -20,7 +20,7 @@ target_link_libraries(ships enet allegro)
 SET_TARGET_PROPERTIES(ships PROPERTIES LINK_FLAGS "-Wl,--output-def,libships.def,--export-all-symbols" )
 
 set(clientsources "src/main.cpp" "src/render.cpp" "src/input.cpp" "src/objects/renderfunctionsclient.cpp")
-set(serversources "src/servermain.cpp" "src/objects/renderfunctionsserver.cpp")
+set(serversources "src/servermain.cpp" "src/client.cpp" "src/objects/renderfunctionsserver.cpp")
 
 add_executable(client ${clientsources} ${objects})
 add_executable(server ${serversources} ${objects})

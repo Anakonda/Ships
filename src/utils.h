@@ -15,14 +15,14 @@ namespace utils
 	float toDegrees(float angle);
 
 	template <class T>
-	unsigned short firstUnusedKey(std::map<unsigned short, T*> map);
+	unsigned short firstUnusedKey(std::map<unsigned short, T> map);
 
 	std::string readFile(std::string filename);
 
 	std::wstring toWstring(std::string text);
 }
 template <class T>
-unsigned short utils::firstUnusedKey(std::map<unsigned short, T*> map) {
+unsigned short utils::firstUnusedKey(std::map<unsigned short, T> map) {
 	for (unsigned short i = 0; i < 65535; ++i) {
 		if (map.count(i) == 0) {
 			return i;

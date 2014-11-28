@@ -1,3 +1,6 @@
+#ifndef SHIP_H
+#define SHIP_H
+
 #include "../object.h"
 
 class Ship : public Object
@@ -23,3 +26,5 @@ public:
 private:
 	float speed;
 };
+
+#endif // SHIP_H

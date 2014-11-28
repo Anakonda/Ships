@@ -5,6 +5,7 @@
 #include "objects/planet.h"
 
 #include "timer.h"
+#include "client.h"
 
 #include <sstream>
 #include <map>
@@ -13,6 +14,9 @@
 #define CALC_INTERVAL 10
 
 bool closing;
+
+std::map<unsigned short, Client> clients;
+std::map<unsigned short, Object*> objects;
 
 void signalHandler(int signal)
 {
@@ -48,8 +52,6 @@ std::string objectToString(Object *object)
 	}
 	return packet.getData();
 }
-
-std::map<unsigned short, Object*> objects;
 
 void CreateUniverse(void)
 {
@@ -117,14 +119,17 @@ int main(int argc, char* argv[])
 			{
 				case ENET_EVENT_TYPE_CONNECT:
 				{
-					unsigned short id = utils::firstUnusedKey(objects);
-					Object *ship = new Ship(id, Point3(0, 0, 0), Point3(0, 0, 1), Point3(0, 1, 0));
-					objects.insert(std::pair<unsigned short, Object*>(id, ship));
-					event.peer->data = (void*)((long long)id);
+					unsigned short shipID = utils::firstUnusedKey(objects);
+					Object *ship = new Ship(shipID, Point3(0, 0, 0), Point3(0, 0, 1), Point3(0, 1, 0));
+					unsigned short clientID = utils::firstUnusedKey<Client>(clients);
+					Client client(event.peer, (Ship*)ship, clientID);
+					clients.insert(std::pair<unsigned short, Client>(clientID, client));
+					objects.insert(std::pair<unsigned short, Object*>(shipID, ship));
+					event.peer->data = (void*)((long long)clientID);
 					std::cout<<"New connection"<< std::endl;
 					Net::Packet packet;
 					packet.writeChar((char)Net::Header::ShipID);
-					packet.writeShort(id);
+					packet.writeShort(shipID);
 					Net::Send(packet, event.peer);
 					std::string data;
 					data.push_back((char)Net::Header::CreateObject);
@@ -148,13 +153,15 @@ int main(int argc, char* argv[])
 				case ENET_EVENT_TYPE_DISCONNECT:
 				{
 					std::cout<<"Disconnect"<<std::endl;
-					unsigned long long id = reinterpret_cast<long long>(event.peer->data);
-					delete objects.find(id)->second;
-					objects.erase(id);
+					unsigned long long clientID = reinterpret_cast<long long>(event.peer->data);
+					unsigned short shipID = clients.find(clientID)->second.ship->getID();
+					delete objects.find(shipID)->second;
+					objects.erase(shipID);
+					clients.erase(clientID);
 
 					Net::Packet packet;
 					packet.writeChar((char)Net::Header::RemoveObject);
-					packet.writeShort(id);
+					packet.writeShort(shipID);
 
 					Net::Send(packet);
 
