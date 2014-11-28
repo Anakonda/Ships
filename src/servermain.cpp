@@ -32,6 +32,7 @@ std::string objectToString(Object *object)
 	packet.writePoint(object->getPosition());
 	packet.writePoint(object->getHeading());
 	packet.writePoint(object->getUp());
+	packet.writePoint(object->getVelocity());
 	switch(type)
 	{
 		case Object::Type::Star:
@@ -56,11 +57,11 @@ std::string objectToString(Object *object)
 void CreateUniverse(void)
 {
 	unsigned short id = utils::firstUnusedKey(objects);
-	Object *star = new Star(id, Point3(200, 0, 0), Point3(0, 0, 1), Point3(0, 1, 0), Point3(1, 0.909, 0.25), 50, 0);
+	Object *star = new Star(id, Point3(200, 0, 0), Point3(0, 0, 1), Point3(0, 1, 0), Point3(1, 0.909, 0.15), 50, 0);
 	objects.insert(std::pair<unsigned short, Object*>(id, star));
 
 	id = utils::firstUnusedKey(objects);
-	star = new Star(id, Point3(-200, 0, 0), Point3(0, 0, 1), Point3(0, 1, 0), Point3(0.9, 0.360, 0.25), 40, 1);
+	star = new Star(id, Point3(-200, 0, 0), Point3(0, 0, 1), Point3(0, 1, 0), Point3(0.9, 0.360, 0.15), 40, 1);
 	objects.insert(std::pair<unsigned short, Object*>(id, star));
 
 	id = utils::firstUnusedKey(objects);
@@ -77,12 +78,13 @@ void handlePacket(ENetEvent event)
 		{
 			unsigned short id = packet.readShort();
 			Object::Type type = (Object::Type)packet.readChar();
-			if(id == (size_t)event.peer->data && type == Object::Type::Ship)
+			if(id == clients.find((size_t)event.peer->data)->second.ship->getID() && type == Object::Type::Ship)
 			{
 				Object *ship = objects.find(id)->second;
 				ship->setPosition(packet.readPoint());
 				ship->setHeading(packet.readPoint());
 				ship->setUp(packet.readPoint());
+				ship->setVelocity(packet.readPoint());
 				ship->needsSending = true;
 			}
 			break;
@@ -122,10 +124,10 @@ int main(int argc, char* argv[])
 					unsigned short shipID = utils::firstUnusedKey(objects);
 					Object *ship = new Ship(shipID, Point3(0, 0, 0), Point3(0, 0, 1), Point3(0, 1, 0));
 					unsigned short clientID = utils::firstUnusedKey<Client>(clients);
-					Client client(event.peer, (Ship*)ship, clientID);
+					Client client(event.peer, dynamic_cast<Ship*>(ship), clientID);
 					clients.insert(std::pair<unsigned short, Client>(clientID, client));
 					objects.insert(std::pair<unsigned short, Object*>(shipID, ship));
-					event.peer->data = (void*)((long long)clientID);
+					event.peer->data = (void*)((size_t)clientID);
 					std::cout<<"New connection"<< std::endl;
 					Net::Packet packet;
 					packet.writeChar((char)Net::Header::ShipID);
@@ -178,33 +180,38 @@ int main(int argc, char* argv[])
 			object.second->simulateFrame(CALC_INTERVAL);
 		}
 
-		Net::Packet objectData;
-		objectData.writeChar((char)Net::Header::ObjectData);
+		for(auto &client : clients)
+		{
+			Ship *ship = client.second.ship;
+			for(auto &object : objects)
+			{
+				if(ship->testCollision(object.second))
+				{
+					break;
+				}
+			}
+			if(ship->getHP() <= 0)
+			{
+				//Do something
+			}
+		}
+
+		char temp = static_cast<char>(Net::Header::ObjectData);
+		std::string data(1, temp);
 		for(auto &object : objects)
 		{
 			if(!object.second->needsSending)
 			{
 				continue;
 			}
-			objectData.writeShort(object.second->getID());
-			Object::Type type = object.second->getType();
-			objectData.writeChar((char)type);
+			data = data + objectToString(object.second);
 
-			objectData.writePoint(object.second->getPosition());
-			objectData.writePoint(object.second->getHeading());
-			objectData.writePoint(object.second->getUp());
-
-			if(type == Object::Type::Ship)
-			{
-				objectData.writeFloat(((Ship*)object.second)->getSpeed());
-			}
-			else
-			{
-				objectData.writePoint(object.second->getVelocity());
-			}
 			object.second->needsSending = false;
 		}
-		Net::Send(objectData);
+		if(data.length() > 1)
+		{
+			Net::Send(Net::Packet(data));
+		}
 	}
 
 	Net::Disconnect();

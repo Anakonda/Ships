@@ -13,9 +13,15 @@
 
 bool closing;
 
+struct
+{
+	unsigned short ID;
+	bool stuck;
+	short HP;
+} shipData;
+
 std::map<unsigned short, Object*> objects;
-unsigned short shipID = -1;
-bool shipStuck = false;
+
 bool screenNeedsResizing = false;
 
 void calculate(void)
@@ -24,17 +30,17 @@ void calculate(void)
 	while(!closing)
 	{
 		timer.wait();
-		if(controllerStatus.connected && shipID != (unsigned short)-1 && objects.find(shipID)->second != nullptr)
+		if(controllerStatus.connected && shipData.ID != (unsigned short)-1 && objects.find(shipData.ID) != objects.end())
 		{
-			Ship *ship = (Ship*)objects.find(shipID)->second;
+			Ship *ship = (Ship*)objects.find(shipData.ID)->second;
 
 			ship->accelerate(controllerStatus.ThumbLY/32767.0 * 0.001 * CALC_INTERVAL);
 			if(controllerStatus.ThumbLY == 0)
 			{
 				ship->slow();
 			}
-			//ship->move(controllerStatus.ThumbLY/32767.0 * -0.2);
-			if(!shipStuck)
+
+			if(!shipData.stuck)
 			{
 				ship->RotateRelative(controllerStatus.ThumbLX/32767.0 * 0.0025 * CALC_INTERVAL,
 									controllerStatus.ThumbRY/32767.0 * -0.0025 * CALC_INTERVAL,
@@ -43,13 +49,13 @@ void calculate(void)
 
 			Net::Packet packet;
 			packet.writeChar((char)Net::Header::ObjectData);
-			packet.writeShort(shipID);
+			packet.writeShort(shipData.ID);
 			packet.writeChar((char)Object::Type::Ship);
 
 			packet.writePoint(ship->getPosition());
 			packet.writePoint(ship->getHeading());
 			packet.writePoint(ship->getUp());
-			packet.writePoint(ship->getSpeed());
+			packet.writePoint(ship->getVelocity());
 
 			Net::Send(packet);
 		}
@@ -58,17 +64,25 @@ void calculate(void)
 			object.second->simulateFrame(CALC_INTERVAL);
 		}
 		bool colliding = false;
-		for(auto &object : objects)
+		if(shipData.ID != (unsigned short)-1 && objects.find(shipData.ID) != objects.end())
 		{
-			if(objects.find(shipID)->second->testCollision(object.second))
+			Object *ship = objects.find(shipData.ID)->second;
+			for(auto &object : objects)
 			{
-				colliding = true;
+				if(objects.find(shipData.ID)->second->testCollision(object.second))
+				{
+					colliding = true;
+				}
+			}
+			if(colliding)
+			{
+				//tell server
 			}
 		}
-		shipStuck = colliding;
-		if(shipStuck)
+		shipData.stuck = colliding;
+		if(shipData.stuck)
 		{
-			((Ship*)objects.find(shipID)->second)->setSpeed(0);
+			((Ship*)objects.find(shipData.ID)->second)->setSpeed(0);
 		}
 	}
 }
@@ -89,27 +103,33 @@ void handlePacket(Net::Packet packet)
 					Point3 pos = packet.readPoint();
 					Point3 heading = packet.readPoint();
 					Point3 up = packet.readPoint();
+					Point3 velocity = packet.readPoint();
 
-
-					if(type == (char)Object::Type::Ship)
+					switch(type)
 					{
-						float speed = packet.readFloat();
-						if(it->first != shipID)
+						case (char)Object::Type::Star:
 						{
-							((Ship*)it->second)->setSpeed(speed);
+
+							packet.readPoint();
+							packet.readFloat();
+							packet.readInt();
+							break;
+						}
+						case (char)Object::Type::Planet:
+						{
+							packet.readFloat();
+							packet.readString();
+							break;
 						}
 					}
-					else
-					{
-						it->second->setVelocity(packet.readPoint());
-					}
-					if(it->first == shipID)
+					if(it->first == shipData.ID)
 					{
 						continue;
 					}
 					it->second->setPosition(pos);
 					it->second->setHeading(heading);
 					it->second->setUp(up);
+					it->second->setVelocity(velocity);
 				}
 			}
 			break;
@@ -124,6 +144,7 @@ void handlePacket(Net::Packet packet)
 				Point3 pos = packet.readPoint();
 				Point3 heading = packet.readPoint();
 				Point3 up = packet.readPoint();
+				Point3 velocity = packet.readPoint();
 				Object *object;
 				switch(type)
 				{
@@ -172,7 +193,7 @@ void handlePacket(Net::Packet packet)
 		}
 		case (char)Net::Header::ShipID:
 		{
-			shipID = (unsigned short)packet.readShort();
+			shipData.ID = (unsigned short)packet.readShort();
 			break;
 		}
 	}
@@ -210,7 +231,7 @@ void networking(void)
 
 void render(void)
 {
-	if(shipID != (unsigned short)-1 && objects.find(shipID)->second != nullptr)
+	if(shipData.ID != (unsigned short)-1 && objects.find(shipData.ID) != objects.end())
 	{
 		if(screenNeedsResizing)
 		{
@@ -228,14 +249,14 @@ void render(void)
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 
-		Object *ship = objects.find(shipID)->second;
+		Object *ship = objects.find(shipData.ID)->second;
 		Point3 campos = ship->getPosition() - 9 * ship->getHeading() + 3 * ship->getUp() - 2 * ship->getHeading() * ((Ship*)ship)->getSpeed();
 		gluLookAt(campos.x, campos.y, campos.z, ship->getPosition().x, ship->getPosition().y, ship->getPosition().z, ship->getUp().x, ship->getUp().y, ship->getUp().z);
 		ship->draw();
 
 		for(auto &object : objects)
 		{
-			if(object.second->getID() != shipID)
+			if(object.second->getID() != shipData.ID)
 			{
 				object.second->draw();
 			}
@@ -288,7 +309,7 @@ void handleEvents(void)
 int main(int argc, char* argv[])
 {
 	//renderer = Renderer();
-
+	shipData.ID = -1;
 	if(!Renderer::Init(argc, argv))
 	{
 		return 1;

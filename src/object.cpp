@@ -30,7 +30,6 @@ unsigned short Object::getID(void) const
 
 void Object::RotateRelative(const float &x, const float &y, const float &z)
 {
-
 	this->heading = this->heading + this->heading.crossProduct(up) * x;
 	this->heading.normalize();
 
@@ -64,9 +63,9 @@ void Object::setPosition(Point3 position)
 	this->position = position;
 }
 
-void Object::setHeading(Point3 heading)
+void Object::setHeading(Point3 newheading)
 {
-	this->heading = heading;
+	this->heading = newheading;
 }
 
 void Object::setUp(Point3 up)
@@ -98,7 +97,7 @@ void Object::simulateFrame(unsigned short deltaTime)
 	this->position = this->position + this->velocity * deltaTime / 10;
 }
 
-bool Object::testCollision(Object *other) const
+bool Object::testCollision(Object *other)
 {
 	return false;
 }

@@ -17,7 +17,7 @@ set(commonsources "src/point3.cpp" "src/object.cpp" "src/utils.cpp" "src/net.cpp
 add_library(ships SHARED ${commonsources})
 target_link_libraries(ships enet allegro)
 
-SET_TARGET_PROPERTIES(ships PROPERTIES LINK_FLAGS "-Wl,--output-def,libships.def,--export-all-symbols" )
+SET_TARGET_PROPERTIES(ships PROPERTIES LINK_FLAGS "-Wl,--export-all-symbols" )
 
 set(clientsources "src/main.cpp" "src/render.cpp" "src/input.cpp" "src/objects/renderfunctionsclient.cpp")
 set(serversources "src/servermain.cpp" "src/client.cpp" "src/objects/renderfunctionsserver.cpp")

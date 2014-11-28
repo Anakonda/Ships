@@ -1,6 +1,6 @@
 #include "ship.h"
 
-Ship::Ship(unsigned short id, Point3 position, Point3 heading, Point3 up) : Object(id, position, heading, up), speed(0)
+Ship::Ship(unsigned short id, Point3 position, Point3 heading, Point3 up) : Object(id, position, heading, up), speed(0), HP(1000)
 {
 
 }
@@ -60,7 +60,7 @@ void Ship::slow(void)
 
 void Ship::simulateFrame(unsigned short deltaTime)
 {
-	this->position = this->position + this->speed * this->heading * deltaTime / 10;
+	this->position = this->position + this->heading * this->speed * deltaTime / 10;
 }
 
 
@@ -104,7 +104,7 @@ const Point3 shipCorners[] = {Point3(0, 0.05, 0.464) * shipSize, Point3(0, -0.05
 								Point3(-0.367, 0.05, -0.459) * shipSize, Point3(-0.367, -0.05, -0.459) * shipSize,
 								Point3(0.367, 0.05, -0.459) * shipSize, Point3(0.367, -0.05, -0.459) * shipSize};
 
-bool Ship::testCollision(Object *other) const
+bool Ship::testCollision(Object *other)
 {
 	if(other->getID() == this->id)
 	{
@@ -119,8 +119,24 @@ bool Ship::testCollision(Object *other) const
 
 		if(other->testLocation(translatedPoint + this->position))
 		{
+			this->HP = this->HP - fabs(this->speed) * 200;
 			return true;
 		}
 	}
 	return false;
+}
+
+short Ship::getHP()
+{
+	return this->HP;
+}
+
+void Ship::setVelocity(Point3 newVelocity)
+{
+	this->speed = newVelocity.len();
+}
+
+Point3 Ship::getVelocity(void) const
+{
+	return this->heading * this->speed;
 }

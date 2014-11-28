@@ -21,18 +21,18 @@ public:
 	virtual ~Object();
 
 //	void RotateAbsolute(const float &x, const float &y, const float &z); // euler angles
-	void RotateRelative(const float &x, const float &y, const float &z); // atan(x) decrees to that direction where ever it is
-	void move(float distance);
+	virtual void RotateRelative(const float &x, const float &y, const float &z); // atan(x) decrees to that direction where ever it is
+	virtual void move(float distance);
 
-	Point3 getPosition(void) const;
-	Point3 getHeading(void) const;
-	Point3 getUp(void) const;
+	virtual Point3 getPosition(void) const;
+	virtual Point3 getHeading(void) const;
+	virtual Point3 getUp(void) const;
 
-	void setPosition(Point3 position);
-	void setHeading(Point3 heading);
-	void setUp(Point3 up);
+	virtual void setPosition(Point3 position);
+	virtual void setHeading(Point3 heading);
+	virtual void setUp(Point3 up);
 
-	unsigned short getID(void) const;
+	virtual unsigned short getID(void) const;
 
 	virtual void draw(void) const = 0;
 
@@ -48,7 +48,7 @@ public:
 	virtual void simulateFrame(unsigned short deltaTime);
 
 	virtual bool testLocation(const Point3 &location) const = 0;
-	virtual bool testCollision(Object *other) const;
+	virtual bool testCollision(Object *other);
 
 protected:
 	unsigned short id;

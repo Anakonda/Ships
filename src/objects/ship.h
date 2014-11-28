@@ -17,13 +17,19 @@ public:
 	void accelerate(float);
 	void slow(void);
 
+	virtual void setVelocity(Point3) override;
+	virtual Point3 getVelocity(void) const override;
+
 	virtual void simulateFrame(unsigned short deltaTime) override;
 
 	virtual bool testLocation(const Point3 &location) const override;
 
-	virtual bool testCollision(Object *other) const;
+	virtual bool testCollision(Object *other) override;
+
+	short getHP();
 
 private:
+	short HP;
 	float speed;
 };
 
