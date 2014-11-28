@@ -58,9 +58,9 @@ void Ship::slow(void)
 	}
 }
 
-void Ship::simulateFrame(void)
+void Ship::simulateFrame(unsigned short deltaTime)
 {
-	this->position = this->position + this->speed * this->heading;
+	this->position = this->position + this->speed * this->heading * deltaTime / 10;
 }
 
 

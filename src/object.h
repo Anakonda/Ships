@@ -45,7 +45,7 @@ public:
 
 	virtual void accelerate(Point3);
 
-	virtual void simulateFrame(void);
+	virtual void simulateFrame(unsigned short deltaTime);
 
 	virtual bool testLocation(const Point3 &location) const = 0;
 	virtual bool testCollision(Object *other) const;

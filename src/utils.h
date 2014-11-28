@@ -18,6 +18,8 @@ namespace utils
 	unsigned short firstUnusedKey(std::map<unsigned short, T*> map);
 
 	std::string readFile(std::string filename);
+
+	std::wstring toWstring(std::string text);
 }
 template <class T>
 unsigned short utils::firstUnusedKey(std::map<unsigned short, T*> map) {

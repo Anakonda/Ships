@@ -14,7 +14,7 @@ public:
 	void accelerate(float);
 	void slow(void);
 
-	virtual void simulateFrame(void) override;
+	virtual void simulateFrame(unsigned short deltaTime) override;
 
 	virtual bool testLocation(const Point3 &location) const override;
 

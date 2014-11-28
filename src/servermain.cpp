@@ -10,6 +10,8 @@
 #include <map>
 #include <signal.h>
 
+#define CALC_INTERVAL 10
+
 bool closing;
 
 void signalHandler(int signal)
@@ -166,7 +168,7 @@ int main(int argc, char* argv[])
 
 		for(auto &object : objects)
 		{
-			object.second->simulateFrame();
+			object.second->simulateFrame(CALC_INTERVAL);
 		}
 
 		Net::Packet objectData;

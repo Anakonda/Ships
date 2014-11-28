@@ -93,9 +93,9 @@ void Object::accelerate(Point3 velocity)
 	this->velocity = temp.normalize() * newSpeed;
 }
 
-void Object::simulateFrame(void)
+void Object::simulateFrame(unsigned short deltaTime)
 {
-	this->position = this->position + this->velocity;
+	this->position = this->position + this->velocity * deltaTime / 10;
 }
 
 bool Object::testCollision(Object *other) const

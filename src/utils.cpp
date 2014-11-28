@@ -70,3 +70,8 @@ std::string utils::readFile(std::string filename)
 	delete buffer;
 	return contents;
 }
+
+std::wstring utils::toWstring(std::string str)
+{
+	return std::wstring(str.begin(), str.end());
+}
