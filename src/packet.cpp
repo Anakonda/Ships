@@ -21,7 +21,7 @@ void Net::Packet::writeString(std::string arg)
 }
 
 
-void Net::Packet::writeChar(char arg) {
+void Net::Packet::writeChar(unsigned char arg) {
 	this->data.push_back(arg);
 }
 
@@ -69,9 +69,9 @@ void Net::Packet::writePoint(Point3 arg)
 	this->writeFloat(arg.z);
 }
 
-char Net::Packet::readChar(void)
+unsigned char Net::Packet::readChar(void)
 {
-	char value = this->data.at(this->pos);
+	unsigned char value = this->data.at(this->pos);
 	this->pos = this->pos + 1;
 	return value;
 }
@@ -82,7 +82,7 @@ int Net::Packet::readInt(void)
 }
 
 short Net::Packet::readShort() {
-	return this->readChar() + (this->readChar() << 8);
+	return (this->readChar() + (this->readChar() << 8));
 }
 
 float Net::Packet::readFloat(void)

@@ -80,9 +80,9 @@ void handlePacket(ENetEvent event)
 			Object::Type type = (Object::Type)packet.readChar();
 			if(clients.find((size_t)event.peer->data) != clients.end())
 			{
-				if(id == clients.find((size_t)event.peer->data)->second.ship->getID() && type == Object::Type::Ship)
+				Ship *ship = clients.find((size_t)event.peer->data)->second.ship;
+				if(ship != nullptr && id == ship->getID())
 				{
-					Object *ship = objects.find(id)->second;
 					ship->setPosition(packet.readPoint());
 					ship->setHeading(packet.readPoint());
 					ship->setUp(packet.readPoint());
@@ -95,15 +95,27 @@ void handlePacket(ENetEvent event)
 		case (char)Net::Header::HP:
 		{
 			unsigned short ID = packet.readShort();
-			unsigned short hp = packet.readShort();
-			if(clients.find((size_t)event.peer->data) != clients.end())
+			short hp = packet.readShort();
+			auto client = clients.find((size_t)event.peer->data);
+			if(client != clients.end() && client->second.ship != nullptr)
 			{
-				if(ID == clients.find((size_t)event.peer->data)->second.ship->getID() && type == Object::Type::Ship)
+				Ship *ship = client->second.ship;
+				if(ID == ship->getID())
 				{
-					Ship *ship =clients.find((size_t)event.peer->data)->second.ship;
 					if(ship->getHP() >= hp)
 					{
 						ship->setHP(hp);
+						if(hp <= 0)
+						{
+							delete ship;
+							objects.erase(ID);
+							client->second.ship = nullptr;
+
+							Net::Packet packet;
+							packet.writeChar((char)Net::Header::RemoveObject);
+							packet.writeShort(ID);
+							Net::Send(packet);
+						}
 					}
 				}
 			}
@@ -176,21 +188,25 @@ int main(int argc, char* argv[])
 				{
 					std::cout<<"Disconnect"<<std::endl;
 					unsigned long long clientID = reinterpret_cast<long long>(event.peer->data);
-					unsigned short shipID = clients.find(clientID)->second.ship->getID();
-					delete objects.find(shipID)->second;
-					objects.erase(shipID);
+					if(clients.find(clientID)->second.ship != nullptr)
+					{
+						unsigned short shipID = clients.find(clientID)->second.ship->getID();
+						delete objects.find(shipID)->second;
+						objects.erase(shipID);
+
+						Net::Packet packet;
+						packet.writeChar((char)Net::Header::RemoveObject);
+						packet.writeShort(shipID);
+
+						Net::Send(packet);
+					}
 					clients.erase(clientID);
-
-					Net::Packet packet;
-					packet.writeChar((char)Net::Header::RemoveObject);
-					packet.writeShort(shipID);
-
-					Net::Send(packet);
-
 					break;
 				}
 				case ENET_EVENT_TYPE_NONE:
+				{
 					break;
+				}
 			}
 		}
 		while(event.type != ENET_EVENT_TYPE_NONE);
@@ -203,17 +219,21 @@ int main(int argc, char* argv[])
 		for(auto &client : clients)
 		{
 			Ship *ship = client.second.ship;
-			for(auto &object : objects)
+			if(ship != nullptr)
 			{
-				if(ship->testCollision(object.second))
+				for(auto &object : objects)
 				{
-					break;
+					if(ship->testCollision(object.second))
+					{
+						break;
+					}
+				}
+				if(ship->getHP() <= 0)
+				{
+					//Do something
 				}
 			}
-			if(ship->getHP() <= 0)
-			{
-				//Do something
-			}
+
 		}
 
 		char temp = static_cast<char>(Net::Header::ObjectData);

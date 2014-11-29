@@ -75,11 +75,12 @@ void calculate(void)
 			}
 			if(colliding)
 			{
+				//tell server
 				Net::Packet packet;
 				packet.writeChar((char)Net::Header::HP);
 				packet.writeShort(shipData.ID);
 				packet.writeShort(((Ship*)ship)->getHP());
-				//tell server
+				Net::Send(packet);
 			}
 		}
 		shipData.stuck = colliding;
@@ -234,29 +235,30 @@ void networking(void)
 
 void render(void)
 {
+
+	if(screenNeedsResizing)
+	{
+		glViewport(0, 0, Renderer::screenWidth, Renderer::screenHeight);
+		screenNeedsResizing = false;
+	}
+	glClearColor(0.0, 0.0, 0.0, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+
+	gluPerspective(75, (float)Renderer::screenWidth/(float)Renderer::screenHeight,  0.1,  500);
+	//gluPerspective(75, 4.0/3.0,  0.1,  500);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
 	if(shipData.ID != (unsigned short)-1 && objects.find(shipData.ID) != objects.end())
 	{
-		if(screenNeedsResizing)
-		{
-			glViewport(0, 0, Renderer::screenWidth, Renderer::screenHeight);
-			screenNeedsResizing = false;
-		}
-		glClearColor(0.0, 0.0, 0.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-
-		gluPerspective(75, (float)Renderer::screenWidth/(float)Renderer::screenHeight,  0.1,  500);
-		//gluPerspective(75, 4.0/3.0,  0.1,  500);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-
 		Object *ship = objects.find(shipData.ID)->second;
 		Point3 campos = ship->getPosition() - 9 * ship->getHeading() + 3 * ship->getUp() - 2 * ship->getHeading() * ((Ship*)ship)->getSpeed();
 		gluLookAt(campos.x, campos.y, campos.z, ship->getPosition().x, ship->getPosition().y, ship->getPosition().z, ship->getUp().x, ship->getUp().y, ship->getUp().z);
 		ship->draw();
-
+	}
 		for(auto &object : objects)
 		{
 			if(object.second->getID() != shipData.ID)
@@ -276,19 +278,27 @@ void render(void)
 
 		glColor4f(1,1,1,1);
 
-		glBegin(GL_QUADS);
-			glVertex3f(0,0,0);
-			glVertex3f(0,10,0);
-			glVertex3f(Renderer::screenWidth * ((Ship*)ship)->getHP() / 1000, 10, 0);
-			glVertex3f(Renderer::screenWidth * ((Ship*)ship)->getHP() / 1000, 0, 0);
-		glEnd();
-
-		Renderer::renderText(std::string("Ping: ") + utils::toString(Net::getPing()), 2, 30);
-
-		glEnable(GL_TEXTURE_2D);
-
-		glEnable(GL_LIGHTING);
+	if(shipData.ID != (unsigned short)-1 && objects.find(shipData.ID) != objects.end())
+	{
+		Object *ship = objects.find(shipData.ID)->second;
+		short hp = ((Ship*)ship)->getHP();
+		if(hp > 0)
+		{
+			glBegin(GL_QUADS);
+				glVertex3f(0,0,0);
+				glVertex3f(0,10,0);
+				glVertex3f(Renderer::screenWidth * hp / 1000, 10, 0);
+				glVertex3f(Renderer::screenWidth * hp / 1000, 0, 0);
+			glEnd();
+		}
 	}
+
+	Renderer::renderText(std::string("Ping: ") + utils::toString(Net::getPing()), 2, 30);
+
+	glEnable(GL_TEXTURE_2D);
+
+	glEnable(GL_LIGHTING);
+
 	// Display the result
 	al_flip_display();
 }

@@ -36,12 +36,12 @@ namespace Net
 
 		void writeString(std::string arg);
 		void writeInt(int arg);
-		void writeChar(char arg);
+		void writeChar(unsigned char arg);
 		void writeFloat(float arg);
 		void writePoint(Point3 arg);
 		void writeShort(short arg);
 
-		char readChar(void);
+		unsigned char readChar(void);
 		int readInt(void);
 		float readFloat(void);
 		std::string readString(void);
