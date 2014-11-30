@@ -39,10 +39,9 @@ void Net::Packet::writeShort(short value) {
 
 void Net::Packet::writeFloat(float arg)
 {
-
 	if(arg <= 0.5 && arg >= -0.5)
 	{
-		this->writeInt(-1);
+		this->writeChar(-1);
 		this->writeInt((int)(arg * FRAC_MAX * 2));
 		return;
 	}
@@ -58,7 +57,7 @@ void Net::Packet::writeFloat(float arg)
 	{
 		frac = -frac;
 	}
-	this->writeInt(exp);
+	this->writeChar(exp);
 	this->writeInt(frac);
 }
 
@@ -87,11 +86,10 @@ short Net::Packet::readShort() {
 
 float Net::Packet::readFloat(void)
 {
-
-	int exp = this->readInt();
+	int exp = (char)this->readChar();
 	int frac = this->readInt();
 
-	if(exp == -1 || exp == -16843009)
+	if(exp == -1)
 	{
 		if(frac != 0)
 		return (float)frac / 2.0 / FRAC_MAX;
