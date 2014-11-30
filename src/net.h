@@ -59,5 +59,6 @@ namespace Net
 	void Send(Packet packet, ENetPeer *peer);
 
 	ENetEvent getEvent(void);
+	ENetEvent waitForEvent(unsigned int timeout);
 
 };

@@ -113,7 +113,6 @@ void handlePacket(Net::Packet packet)
 					{
 						case (char)Object::Type::Star:
 						{
-
 							packet.readPoint();
 							packet.readFloat();
 							packet.readInt();
@@ -205,31 +204,31 @@ void handlePacket(Net::Packet packet)
 
 void networking(void)
 {
-	Timer timer(CALC_INTERVAL);
+	ENetEvent event;
 	while(!closing)
 	{
-		timer.wait();
-		ENetEvent event;
-		do
+		unsigned int waitTimeout = 1000;
+		event = Net::waitForEvent(waitTimeout);
+		switch(event.type)
 		{
-			event = Net::getEvent();
-			switch(event.type)
+			case ENET_EVENT_TYPE_RECEIVE:
 			{
-				case ENET_EVENT_TYPE_RECEIVE:
-				{
-					handlePacket(Net::Packet(std::string((char*)event.packet->data, event.packet->dataLength)));
-					enet_packet_destroy(event.packet);
-					break;
-				}
+				handlePacket(Net::Packet(std::string((char*)event.packet->data, event.packet->dataLength)));
+				enet_packet_destroy(event.packet);
+				break;
+			}
 
-				case ENET_EVENT_TYPE_DISCONNECT:
-				{
-					closing = true;
-					break;
-				}
+			case ENET_EVENT_TYPE_DISCONNECT:
+			{
+				std::cout<<"Server closed."<<std::endl;
+				closing = true;
+				break;
+			}
+			case ENET_EVENT_TYPE_NONE:
+			{
+				//std::cout<<"No packets in last "<<waitTimeout/1000<<" second(s)"<<std::endl;
 			}
 		}
-		while(event.type != ENET_EVENT_TYPE_NONE);
 	}
 }
 

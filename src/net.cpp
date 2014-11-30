@@ -10,7 +10,7 @@ bool Net::Connect(std::string address, unsigned int port)
 
 	if(connection == nullptr)
 	{
-		std::cout<<"fail"<<std::endl;
+		return false;
 	}
 
 	ENetAddress enetAddress;
@@ -66,6 +66,11 @@ void Net::Send(Packet packet)
 
 void Net::Send(Packet packet, ENetPeer *peer)
 {
+	if(peer == nullptr)
+	{
+		Net::Send(packet);
+		return;
+	}
 	ENetPacket *enetPacket = enet_packet_create(packet.getData().c_str(), packet.getData().size(), ENET_PACKET_FLAG_RELIABLE);
 
 	enet_peer_send(peer, 0, enetPacket);
@@ -75,5 +80,12 @@ ENetEvent Net::getEvent(void)
 {
 	ENetEvent event;
 	enet_host_service(connection, &event, 0);
+	return event;
+}
+
+ENetEvent Net::waitForEvent(unsigned int timeout)
+{
+	ENetEvent event;
+	enet_host_service(connection, &event, timeout);
 	return event;
 }

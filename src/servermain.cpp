@@ -76,6 +76,7 @@ void respawn(Client &client)
 	timer.wait();
 	unsigned short id = utils::firstUnusedKey(objects);
 	Ship *ship = new Ship(id, Point3(0,0,0), Point3(0,0,1), Point3(0,1,0));
+	client.ship = ship;
 	objects.insert(std::pair<unsigned short, Object*>(id, ship));
 	Net::Packet packet;
 	packet.writeChar((char)Net::Header::ShipID);
