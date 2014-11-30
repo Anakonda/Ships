@@ -10,6 +10,7 @@
 #include <sstream>
 #include <map>
 #include <signal.h>
+#include <thread>
 
 #define CALC_INTERVAL 10
 
@@ -69,6 +70,24 @@ void CreateUniverse(void)
 	objects.insert(std::pair<unsigned short, Object*>(id, planet));
 }
 
+void respawn(Client &client)
+{
+	Timer timer(1000);
+	timer.wait();
+	unsigned short id = utils::firstUnusedKey(objects);
+	Ship *ship = new Ship(id, Point3(0,0,0), Point3(0,0,1), Point3(0,1,0));
+	objects.insert(std::pair<unsigned short, Object*>(id, ship));
+	Net::Packet packet;
+	packet.writeChar((char)Net::Header::ShipID);
+	packet.writeShort(id);
+	Net::Send(packet, client.peer);
+
+	std::string data;
+	data.push_back((char)Net::Header::CreateObject);
+	data = data + objectToString(ship);
+	Net::Send(Net::Packet(data));
+}
+
 void handlePacket(ENetEvent event)
 {
 	Net::Packet packet(std::string((char*)event.packet->data, event.packet->dataLength));
@@ -115,6 +134,8 @@ void handlePacket(ENetEvent event)
 							packet.writeChar((char)Net::Header::RemoveObject);
 							packet.writeShort(ID);
 							Net::Send(packet);
+							std::thread thread(respawn, std::ref(client->second));
+							thread.detach();
 						}
 					}
 				}
@@ -215,7 +236,7 @@ int main(int argc, char* argv[])
 		{
 			object.second->simulateFrame(CALC_INTERVAL);
 		}
-
+		/*
 		for(auto &client : clients)
 		{
 			Ship *ship = client.second.ship;
@@ -233,8 +254,8 @@ int main(int argc, char* argv[])
 					//Do something
 				}
 			}
-
 		}
+		*/
 
 		char temp = static_cast<char>(Net::Header::ObjectData);
 		std::string data(1, temp);
