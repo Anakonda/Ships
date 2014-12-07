@@ -2,21 +2,21 @@
 #include "star.h"
 #include "planet.h"
 
-void Planet::draw() const
+void Planet::draw(iRenderer *renderer) const
 {
-	Renderer::DrawModel("res/sphere.obj", this->texture, this->getPosition(), this->getHeading(), this->getUp(), this->scale);
+	renderer->DrawModel("res/sphere.obj", this->texture, this->getPosition(), this->getHeading(), this->getUp(), this->scale);
 }
 
-void Ship::draw(void) const
+void Ship::draw(iRenderer *renderer) const
 {
-	Renderer::DrawModel("res/ship.obj", "res/ship.tga", this->getPosition(), this->getHeading(), this->getUp(), 5.0f);
+	renderer->DrawModel("res/ship.obj", "res/ship.tga", this->getPosition(), this->getHeading(), this->getUp(), 5.0f);
 }
 
-void Star::draw() const
+void Star::draw(iRenderer *renderer) const
 {
 	float emission[] = {this->color.x, this->color.y, this->color.z, 1};
 	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, emission);
-	Renderer::DrawModel("res/sphere.obj", "res/valkoinen.tga", this->getPosition(), this->getHeading(), this->getUp(), this->scale);
+	renderer->DrawModel("res/sphere.obj", "res/valkoinen.tga", this->getPosition(), this->getHeading(), this->getUp(), this->scale);
 
 	float ambientLight[] = {0, 0, 0, 1};
 	float diffuseLight[] = {this->color.x, this->color.y, this->color.z, 1.0f};

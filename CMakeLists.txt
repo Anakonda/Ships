@@ -10,22 +10,26 @@ find_package(Freetype REQUIRED)
 find_package(GLEW REQUIRED)
 include_directories(${FREETYPE_INCLUDE_DIRS})
 
-set(objects "src/objects/ship.cpp" "src/objects/star.cpp" "src/objects/planet.cpp")
+set(objects "src/objects/ship.cpp" "src/objects/star.cpp" "src/objects/planet.cpp" "src/objects/renderfunctionsclient.cpp")
 
-set(commonsources "src/point3.cpp" "src/object.cpp" "src/utils.cpp" "src/net.cpp" "src/packet.cpp" "src/timer.cpp")
+set(weapons "src/weapons/laser.cpp")
+set(projectiles "src/projectiles/laser.cpp")
 
-add_library(ships SHARED ${commonsources})
-target_link_libraries(ships enet allegro)
+set(commonsources "src/point3.cpp" "src/object.cpp" "src/utils.cpp" "src/net.cpp" "src/packet.cpp" "src/timer.cpp" "src/weapon.cpp" "src/projectile.cpp" ${weapons} ${objects} ${projectiles})
 
-SET_TARGET_PROPERTIES(ships PROPERTIES LINK_FLAGS "-Wl,--export-all-symbols" )
+add_library(lib SHARED ${commonsources})
+set_target_properties(lib PROPERTIES OUTPUT_NAME "ships")
+target_link_libraries(lib enet allegro ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
 
-set(clientsources "src/main.cpp" "src/render.cpp" "src/input.cpp" "src/objects/renderfunctionsclient.cpp")
-set(serversources "src/servermain.cpp" "src/client.cpp" "src/objects/renderfunctionsserver.cpp")
+SET_TARGET_PROPERTIES(lib PROPERTIES LINK_FLAGS "-Wl,--export-all-symbols" )
 
-add_executable(client ${clientsources} ${objects})
-add_executable(server ${serversources} ${objects})
+set(clientsources "src/main.cpp" "src/render.cpp" "src/input.cpp" "src/render.cpp")
+set(serversources "src/servermain.cpp" "src/client.cpp")
+
+add_executable(client ${clientsources})
+add_executable(server ${serversources})
 
 set_target_properties(client PROPERTIES OUTPUT_NAME "ships")
 
-target_link_libraries(client oglft SOIL ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${FREETYPE_LIBRARIES} ships)
-target_link_libraries(server ships)
+target_link_libraries(client oglft SOIL ${FREETYPE_LIBRARIES} lib)
+target_link_libraries(server lib)

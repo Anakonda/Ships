@@ -14,7 +14,8 @@ public:
 		Invalid = 0x00,
 		Ship = 0x01,
 		Star = 0x02,
-		Planet = 0x03
+		Planet = 0x03,
+		Projectile = 0xF0
 	};
 
 	Object(unsigned short id, Point3 position, Point3 heading, Point3 up);
@@ -34,9 +35,9 @@ public:
 
 	virtual unsigned short getID(void) const;
 
-	virtual void draw(void) const = 0;
+	virtual void draw(iRenderer *renderer) const = 0;
 
-	virtual Object::Type getType(void) const;
+	virtual Object::Type getType(void) const = 0;
 
 	virtual float getMass(void) const;
 

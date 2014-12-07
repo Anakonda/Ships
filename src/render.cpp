@@ -15,10 +15,21 @@
 #include <OGLFT.h>
 #include <allegro5/allegro_opengl.h>
 
+/*
 ALLEGRO_DISPLAY* Renderer::window;
 
 unsigned int Renderer::screenWidth;
 unsigned int Renderer::screenHeight;
+*/
+
+iRenderer::~iRenderer()
+{
+
+}
+Renderer::~Renderer()
+{
+
+}
 
 struct Model
 {
@@ -276,6 +287,7 @@ void Renderer::LoadModel(std::string path)
 
 void Renderer::DrawModel(const std::string &path, const std::string &texture, const Point3 &pos, const Point3 &forward, const Point3 &up, const float &scale)
 {
+
 	//Todo Try to load it
 	auto modelIT = models.find(path);
 	if(modelIT == models.end())

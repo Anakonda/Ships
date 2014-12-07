@@ -1,13 +1,13 @@
 #include "ship.h"
 
-Ship::Ship(unsigned short id, Point3 position, Point3 heading, Point3 up) : Object(id, position, heading, up), speed(0), HP(1000)
+Ship::Ship(unsigned short id, Point3 position, Point3 heading, Point3 up, Weapon *weapon) : Object(id, position, heading, up), speed(0), HP(1000), weapon(weapon)
 {
 
 }
 
 Ship::~Ship()
 {
-
+	delete this->weapon;
 }
 
 Object::Type Ship::getType() const
@@ -61,6 +61,7 @@ void Ship::slow(void)
 void Ship::simulateFrame(unsigned short deltaTime)
 {
 	this->position = this->position + this->heading * this->speed * deltaTime / 10;
+	this->weapon->simulateFrame(deltaTime);
 }
 
 
@@ -144,4 +145,9 @@ void Ship::setVelocity(Point3 newVelocity)
 Point3 Ship::getVelocity(void) const
 {
 	return this->heading * this->speed;
+}
+
+Projectile *Ship::shoot(unsigned short id)
+{
+	this->weapon->shoot(id, this->position, this->heading, this->up);
 }

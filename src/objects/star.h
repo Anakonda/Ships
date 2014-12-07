@@ -6,7 +6,7 @@ public:
 	Star(unsigned short id, Point3 position, Point3 heading, Point3 up, Point3 color, float scale, unsigned int lightID);
 	virtual ~Star();
 
-	virtual void draw(void) const override;
+	virtual void draw(iRenderer *renderer) const override;
 	virtual Object::Type getType() const override;
 
 	Point3 getColor() const;

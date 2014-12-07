@@ -4,6 +4,8 @@
 #include "objects/star.h"
 #include "objects/planet.h"
 
+#include "weapons/laser.h"
+
 #include "timer.h"
 #include "client.h"
 
@@ -17,7 +19,9 @@
 bool closing;
 
 std::map<unsigned short, Client> clients;
+
 std::map<unsigned short, Object*> objects;
+std::map<unsigned short, Projectile*> projectiles;
 
 void signalHandler(int signal)
 {
@@ -51,6 +55,12 @@ std::string objectToString(Object *object)
 			packet.writeString(planet->getTexture());
 			break;
 		}
+		case Object::Type::Projectile:
+		{
+			packet.writeChar((char)((Projectile*)object)->getProjectileType());
+			packet.writePoint(object->getVelocity());
+			break;
+		}
 	}
 	return packet.getData();
 }
@@ -75,7 +85,8 @@ void respawn(Client &client)
 	Timer timer(1000);
 	timer.wait();
 	unsigned short id = utils::firstUnusedKey(objects);
-	Ship *ship = new Ship(id, Point3(0,0,0), Point3(0,0,1), Point3(0,1,0));
+	Weapon *weapon = new WeaponLaser();
+	Ship *ship = new Ship(id, Point3(0,0,0), Point3(0,0,1), Point3(0,1,0), weapon);
 	client.ship = ship;
 	objects.insert(std::pair<unsigned short, Object*>(id, ship));
 	Net::Packet packet;
@@ -143,6 +154,29 @@ void handlePacket(ENetEvent event)
 			}
 			break;
 		}
+		case (char)Net::Header::Shoot:
+		{
+			unsigned short ID = packet.readShort();
+			auto client = clients.find((size_t)event.peer->data);
+			if(client != clients.end() && client->second.ship != nullptr)
+			{
+				Ship *ship = client->second.ship;
+				if(ID == ship->getID())
+				{
+					unsigned short projectileID = utils::firstUnusedKey(projectiles);
+					Projectile *projectile = ship->shoot(projectileID);
+					if(projectile != nullptr)
+					{
+						projectiles.insert(std::pair<unsigned short, Projectile*>(projectileID, projectile));
+						std::string data;
+						data.push_back((char)Net::Header::CreateObject);
+						data = data + objectToString(projectile);
+						Net::Send(Net::Packet(data));
+					}
+				}
+			}
+			break;
+		}
 	}
 }
 
@@ -176,7 +210,7 @@ int main(int argc, char* argv[])
 				case ENET_EVENT_TYPE_CONNECT:
 				{
 					unsigned short shipID = utils::firstUnusedKey(objects);
-					Object *ship = new Ship(shipID, Point3(0, 0, 0), Point3(0, 0, 1), Point3(0, 1, 0));
+					Object *ship = new Ship(shipID, Point3(0, 0, 0), Point3(0, 0, 1), Point3(0, 1, 0), new WeaponLaser());
 					unsigned short clientID = utils::firstUnusedKey<Client>(clients);
 					Client client(event.peer, dynamic_cast<Ship*>(ship), clientID);
 					clients.insert(std::pair<unsigned short, Client>(clientID, client));
@@ -237,26 +271,24 @@ int main(int argc, char* argv[])
 		{
 			object.second->simulateFrame(CALC_INTERVAL);
 		}
-		/*
-		for(auto &client : clients)
+		std::vector<unsigned short> projectilesToRemove;
+		for(auto &projectile : projectiles)
 		{
-			Ship *ship = client.second.ship;
-			if(ship != nullptr)
+			projectile.second->simulateFrame(CALC_INTERVAL);
+			if(projectile.second->getLifetime() == 0)
 			{
-				for(auto &object : objects)
-				{
-					if(ship->testCollision(object.second))
-					{
-						break;
-					}
-				}
-				if(ship->getHP() <= 0)
-				{
-					//Do something
-				}
+				projectilesToRemove.push_back(projectile.first);
 			}
 		}
-		*/
+
+		for(auto &id : projectilesToRemove)
+		{
+			Net::Packet packet;
+			packet.writeChar((char)Net::Header::RemoveProjectile);
+			packet.writeShort(id);
+			projectiles.erase(id);
+			Net::Send(packet);
+		}
 
 		char temp = static_cast<char>(Net::Header::ObjectData);
 		std::string data(1, temp);

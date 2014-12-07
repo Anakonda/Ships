@@ -2,14 +2,16 @@
 #define SHIP_H
 
 #include "../object.h"
+#include "../weapon.h"
+#include "../projectile.h"
 
 class Ship : public Object
 {
 public:
-	Ship(unsigned short id, Point3 position, Point3 heading, Point3 up);
+	Ship(unsigned short id, Point3 position, Point3 heading, Point3 up, Weapon *weapon);
 	virtual ~Ship();
 
-	virtual void draw(void) const override;
+	virtual void draw(iRenderer *renderer) const override;
 	virtual Object::Type getType() const override;
 
 	void setSpeed(float speed);
@@ -29,9 +31,12 @@ public:
 	short getHP();
 	void setHP(short hp);
 
+	Projectile *shoot(unsigned short id);
+
 private:
 	short HP;
 	float speed;
+	Weapon *weapon;
 };
 
 #endif // SHIP_H

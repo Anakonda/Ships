@@ -8,13 +8,15 @@ namespace Net
 {
 	enum class Header : unsigned char
 	{
-		ObjectData   = 0x00,
-		CreateObject = 0x01,
-		RemoveObject = 0x02,
+		ObjectData       = 0x00,
+		CreateObject     = 0x01,
+		RemoveObject     = 0x02,
+		RemoveProjectile = 0x03,
 
-		ShipID = 0x10,
-		HP     = 0x11
-
+		ShipID   = 0x10,
+		HP       = 0x11,
+		Shoot    = 0x12,
+		cooldown = 0x13
 	};
 
 	bool Connect(std::string address, unsigned int port);

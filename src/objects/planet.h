@@ -8,7 +8,7 @@ public:
 	Planet(unsigned short id, Point3 position, Point3 heading, Point3 up, float scale, std::string texture);
 	virtual ~Planet();
 
-	virtual void draw(void) const override;
+	virtual void draw(iRenderer *renderer) const override;
 	virtual Object::Type getType(void) const override;
 
 	float getScale(void) const;

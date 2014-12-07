@@ -14,21 +14,36 @@
 
 #include <allegro5/allegro.h>
 
-namespace Renderer
+
+class iRenderer
 {
+public:
+	virtual ~iRenderer();
+	virtual bool Init(int argc, char* argv[]) = 0;
+	virtual void deInit(void) = 0;
+	virtual void LoadModel(std::string path) = 0;
+	virtual void LoadTexture(std::string path) = 0;
+	virtual void DrawModel(const std::string &path, const std::string &texture, const Point3 &pos, const Point3 &forward, const Point3 &up, const float &scale) = 0;
 
-	bool Init(int argc, char* argv[]);
-	void deInit(void);
-	void LoadModel(std::string path);
-	void LoadTexture(std::string path);
-	void DrawModel(const std::string &path, const std::string &texture, const Point3 &pos, const Point3 &forward, const Point3 &up, const float &scale);
+	virtual void renderText(const std::string &text, float x, float y) = 0;
+};
 
-	void renderText(const std::string &text, float x, float y);
+class Renderer : public iRenderer
+{
+public:
+	virtual ~Renderer();
+	bool Init(int argc, char* argv[]) override;
+	void deInit(void) override;
+	void LoadModel(std::string path) override;
+	void LoadTexture(std::string path) override;
+	void DrawModel(const std::string &path, const std::string &texture, const Point3 &pos, const Point3 &forward, const Point3 &up, const float &scale) override;
 
-	extern ALLEGRO_DISPLAY* window;
+	void renderText(const std::string &text, float x, float y) override;
 
-	extern unsigned int screenWidth;
-	extern unsigned int screenHeight;
+	ALLEGRO_DISPLAY* window;
+
+	unsigned int screenWidth;
+	unsigned int screenHeight;
 };
 
 #endif

@@ -6,12 +6,19 @@
 #include "objects/ship.h"
 #include "objects/star.h"
 #include "objects/planet.h"
+
+#include "weapons/laser.h"
+
+#include "projectiles/laser.h"
+
 #include "net.h"
 #include "timer.h"
 
 #define CALC_INTERVAL 10
 
 bool closing;
+
+Renderer renderer;
 
 struct
 {
@@ -20,12 +27,14 @@ struct
 } shipData;
 
 std::map<unsigned short, Object*> objects;
+std::map<unsigned short, Projectile*> projectiles;
 
 bool screenNeedsResizing = false;
 
 void calculate(void)
 {
 	Timer timer(CALC_INTERVAL);
+	bool sendInfo = true;
 	while(!closing)
 	{
 		timer.wait();
@@ -45,22 +54,43 @@ void calculate(void)
 									controllerStatus.ThumbRY/32767.0 * -0.0025 * CALC_INTERVAL,
 									controllerStatus.ThumbRX/32767.0 * -0.0025 * CALC_INTERVAL);
 			}
+			if(controllerStatus.A)
+			{
+				Net::Packet packet;
+				packet.writeChar((char)Net::Header::Shoot);
+				packet.writeShort(shipData.ID);
 
-			Net::Packet packet;
-			packet.writeChar((char)Net::Header::ObjectData);
-			packet.writeShort(shipData.ID);
-			packet.writeChar((char)Object::Type::Ship);
+				Net::Send(packet);
+			}
 
-			packet.writePoint(ship->getPosition());
-			packet.writePoint(ship->getHeading());
-			packet.writePoint(ship->getUp());
-			packet.writePoint(ship->getVelocity());
+			if(sendInfo)
+			{
+				Net::Packet packet;
+				packet.writeChar((char)Net::Header::ObjectData);
+				packet.writeShort(shipData.ID);
+				packet.writeChar((char)Object::Type::Ship);
 
-			Net::Send(packet);
+				packet.writePoint(ship->getPosition());
+				packet.writePoint(ship->getHeading());
+				packet.writePoint(ship->getUp());
+				packet.writePoint(ship->getVelocity());
+
+				Net::Send(packet);
+
+				sendInfo = false;
+			}
+			else
+			{
+				sendInfo = true;
+			}
 		}
 		for(auto &object : objects)
 		{
 			object.second->simulateFrame(CALC_INTERVAL);
+		}
+		for(auto &projectile : projectiles)
+		{
+			projectile.second->simulateFrame(CALC_INTERVAL);
 		}
 		bool colliding = false;
 		if(shipData.ID != (unsigned short)-1 && objects.find(shipData.ID) != objects.end())
@@ -124,6 +154,11 @@ void handlePacket(Net::Packet packet)
 							packet.readString();
 							break;
 						}
+						case (char)Object::Type::Projectile:
+						{
+							packet.readChar();
+							break;
+						}
 					}
 					if(it->first == shipData.ID)
 					{
@@ -143,6 +178,7 @@ void handlePacket(Net::Packet packet)
 			{
 				unsigned short id = packet.readShort();
 				bool exists = (objects.find(id) != objects.end());
+				bool insertObject = false;
 				char type = packet.readChar();
 				Point3 pos = packet.readPoint();
 				Point3 heading = packet.readPoint();
@@ -155,7 +191,9 @@ void handlePacket(Net::Packet packet)
 					{
 						if(!exists)
 						{
-							object = new Ship(id, pos, heading, up);
+							Weapon *weapon = new WeaponLaser();
+							object = new Ship(id, pos, heading, up, weapon);
+							insertObject = true;
 						}
 						break;
 					}
@@ -167,6 +205,7 @@ void handlePacket(Net::Packet packet)
 						if(!exists)
 						{
 							object = new Star(id, pos, heading, up, color, scale, light);
+							insertObject = true;
 						}
 						break;
 					}
@@ -177,11 +216,37 @@ void handlePacket(Net::Packet packet)
 						if(!exists)
 						{
 							object = new Planet(id, pos, heading, up, scale, texture);
+							insertObject = true;
+						}
+						break;
+					}
+					case (char)Object::Type::Projectile:
+					{
+						char projectileType = packet.readChar();
+						Point3 velocity = packet.readPoint();
+						Projectile *projectile;
+						bool insertProjectile = false;
+						exists = (projectiles.find(id) != projectiles.end());
+						switch(projectileType)
+						{
+							case (char)Projectile::Type::Laser:
+							{
+								if(!exists)
+								{
+									projectile = new ProjectileLaser(id, pos, heading, up, velocity);
+									insertProjectile = true;
+								}
+								break;
+							}
+						}
+						if(insertProjectile)
+						{
+							projectiles.insert(std::pair<unsigned short, Projectile*>(id, projectile));
 						}
 						break;
 					}
 				}
-				if(!exists)
+				if(insertObject)
 				{
 					objects.insert(std::pair<unsigned short, Object*>(id, object));
 				}
@@ -192,6 +257,12 @@ void handlePacket(Net::Packet packet)
 		{
 			unsigned short id = packet.readShort();
 			objects.erase(id);
+			break;
+		}
+		case (char)Net::Header::RemoveProjectile:
+		{
+			unsigned short id = packet.readShort();
+			projectiles.erase(id);
 			break;
 		}
 		case (char)Net::Header::ShipID:
@@ -234,10 +305,9 @@ void networking(void)
 
 void render(void)
 {
-
 	if(screenNeedsResizing)
 	{
-		glViewport(0, 0, Renderer::screenWidth, Renderer::screenHeight);
+		glViewport(0, 0, renderer.screenWidth, renderer.screenHeight);
 		screenNeedsResizing = false;
 	}
 	glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -246,7 +316,7 @@ void render(void)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	gluPerspective(75, (float)Renderer::screenWidth/(float)Renderer::screenHeight,  0.1,  500);
+	gluPerspective(75, (float)renderer.screenWidth/(float)renderer.screenHeight,  0.1,  500);
 	//gluPerspective(75, 4.0/3.0,  0.1,  500);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -256,26 +326,33 @@ void render(void)
 		Object *ship = objects.find(shipData.ID)->second;
 		Point3 campos = ship->getPosition() - 9 * ship->getHeading() + 3 * ship->getUp() - 2 * ship->getHeading() * ((Ship*)ship)->getSpeed();
 		gluLookAt(campos.x, campos.y, campos.z, ship->getPosition().x, ship->getPosition().y, ship->getPosition().z, ship->getUp().x, ship->getUp().y, ship->getUp().z);
-		ship->draw();
+		ship->draw(&renderer);
 	}
-		for(auto &object : objects)
+
+	for(auto &object : objects)
+	{
+		if(object.second->getID() != shipData.ID)
 		{
-			if(object.second->getID() != shipData.ID)
-			{
-				object.second->draw();
-			}
+			object.second->draw(&renderer);
 		}
+	}
 
-		glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
-		glLoadIdentity();
-		glOrtho(0.0,  Renderer::screenWidth, 0.0, Renderer::screenHeight, -1.0, 1.0);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		glDisable(GL_LIGHTING);
-		glDisable(GL_TEXTURE_2D);
+	for(auto &projectile : projectiles)
+	{
+		std::cout<<"draw projectile"<<std::endl;
+		projectile.second->draw(&renderer);
+	}
 
-		glColor4f(1,1,1,1);
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0.0,  renderer.screenWidth, 0.0, renderer.screenHeight, -1.0, 1.0);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glDisable(GL_LIGHTING);
+	glDisable(GL_TEXTURE_2D);
+
+	glColor4f(1,1,1,1);
 
 	if(shipData.ID != (unsigned short)-1 && objects.find(shipData.ID) != objects.end())
 	{
@@ -286,13 +363,13 @@ void render(void)
 			glBegin(GL_QUADS);
 				glVertex3f(0,0,0);
 				glVertex3f(0,10,0);
-				glVertex3f(Renderer::screenWidth * hp / 1000, 10, 0);
-				glVertex3f(Renderer::screenWidth * hp / 1000, 0, 0);
+				glVertex3f(renderer.screenWidth * hp / 1000, 10, 0);
+				glVertex3f(renderer.screenWidth * hp / 1000, 0, 0);
 			glEnd();
 		}
 	}
 
-	Renderer::renderText(std::string("Ping: ") + utils::toString(Net::getPing()), 2, 30);
+	renderer.renderText(std::string("Ping: ") + utils::toString(Net::getPing()), 2, 30);
 
 	glEnable(GL_TEXTURE_2D);
 
@@ -305,7 +382,7 @@ void render(void)
 void handleEvents(void)
 {
 	ALLEGRO_EVENT_QUEUE *eventQueue = al_create_event_queue();
-	al_register_event_source(eventQueue, al_get_display_event_source(Renderer::window));
+	al_register_event_source(eventQueue, al_get_display_event_source(renderer.window));
 	while(!closing)
 	{
 		ALLEGRO_EVENT event;
@@ -320,8 +397,8 @@ void handleEvents(void)
 			}
 			case ALLEGRO_EVENT_DISPLAY_RESIZE:
 			{
-				Renderer::screenWidth = event.display.width;
-				Renderer::screenHeight = event.display.height;
+				renderer.screenWidth = event.display.width;
+				renderer.screenHeight = event.display.height;
 				screenNeedsResizing = true;
 				break;
 			}
@@ -334,20 +411,24 @@ int main(int argc, char* argv[])
 {
 	//renderer = Renderer();
 	shipData.ID = -1;
-	if(!Renderer::Init(argc, argv))
+	renderer = Renderer();
+	if(!renderer.Init(argc, argv))
 	{
 		return 1;
 	}
 
 	glShadeModel(GL_SMOOTH);
 
-	Renderer::LoadModel("res/ship.obj");
-	Renderer::LoadTexture("res/ship.tga");
+	renderer.LoadModel("res/ship.obj");
+	renderer.LoadTexture("res/ship.tga");
 
-	Renderer::LoadModel("res/sphere.obj");
-	Renderer::LoadTexture("res/valkoinen.tga");
+	renderer.LoadModel("res/sphere.obj");
+	renderer.LoadTexture("res/valkoinen.tga");
 
-	Renderer::LoadTexture("res/planeetta.tga");
+	renderer.LoadTexture("res/planeetta.tga");
+
+	renderer.LoadModel("res/laser.obj");
+	renderer.LoadTexture("res/red.tga");
 
 	std::string address = "localhost";
 	unsigned int port = 8555;
@@ -388,7 +469,7 @@ int main(int argc, char* argv[])
 	networkThread.join();
 	eventsThread.join();
 
-	Renderer::deInit();
+	renderer.deInit();
 
 	//clean
 	for(auto &object : objects)

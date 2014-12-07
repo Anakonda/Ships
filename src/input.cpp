@@ -5,6 +5,8 @@
 #include <allegro5/allegro.h>
 #include <thread>
 
+#include <iostream>
+
 std::thread thread;
 bool controlsClosing;
 
@@ -33,6 +35,7 @@ void controlsLoop(void)
 			controllerStatus.ThumbLY = -joystickState.stick[0].axis[1] * 32767;
 			controllerStatus.ThumbRX = joystickState.stick[1].axis[0] * 32767;
 			controllerStatus.ThumbRY = -joystickState.stick[1].axis[1] * 32767;
+			controllerStatus.A = joystickState.button[0] == 32767;
 		}
 	}
 	al_uninstall_joystick();
