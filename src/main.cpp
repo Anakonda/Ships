@@ -339,7 +339,6 @@ void render(void)
 
 	for(auto &projectile : projectiles)
 	{
-		std::cout<<"draw projectile"<<std::endl;
 		projectile.second->draw(&renderer);
 	}
 

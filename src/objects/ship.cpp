@@ -15,6 +15,11 @@ Object::Type Ship::getType() const
 	return Object::Type::Ship;
 }
 
+void Ship::draw(iRenderer *renderer) const
+{
+	renderer->DrawModel("res/ship.obj", "res/ship.tga", this->getPosition(), this->getHeading(), this->getUp(), 5.0f);
+}
+
 void Ship::setSpeed(float speed)
 {
 	this->speed = speed;

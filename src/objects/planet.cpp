@@ -29,3 +29,8 @@ bool Planet::testLocation(const Point3 &location) const
 {
 	return (this->position - location).len() <= this->scale;
 }
+
+void Planet::draw(iRenderer *renderer) const
+{
+	renderer->DrawModel("res/sphere.obj", this->texture, this->getPosition(), this->getHeading(), this->getUp(), this->scale);
+}

@@ -10,7 +10,7 @@ find_package(Freetype REQUIRED)
 find_package(GLEW REQUIRED)
 include_directories(${FREETYPE_INCLUDE_DIRS})
 
-set(objects "src/objects/ship.cpp" "src/objects/star.cpp" "src/objects/planet.cpp" "src/objects/renderfunctionsclient.cpp")
+set(objects "src/objects/ship.cpp" "src/objects/star.cpp" "src/objects/planet.cpp")
 
 set(weapons "src/weapons/laser.cpp")
 set(projectiles "src/projectiles/laser.cpp")
